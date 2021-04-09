@@ -7,19 +7,6 @@ from matplotlib.figure import Figure
 from tkinter import filedialog, messagebox
 import matplotlib.pyplot as plt
 
-NavigationToolbar2Tk.toolitems = (
-        ('Home', 'Reset view', 'home', 'home'),
-        (None, None, None, None),
-        ('Pan', 'Pan', 'move', 'pan'),
-        ('Zoom', 'Zoom In/Out', 'zoom_to_rect', 'zoom'),
-        (None, None, None, None),
-        ('Subplots', 'Adjust subplot', 'subplots', 'configure_subplots'),
-        ('Save', 'Save figure', 'filesave', 'save_figure'),
-    )
-
-raster_file = None
-
-
 class GeographicInformationSystem:
 
     root = Tk()
@@ -29,6 +16,19 @@ class GeographicInformationSystem:
 
     a = fig2.add_subplot(111)
     ax = fig1.add_subplot(111)
+    raster_file = None
+    vector_loaded = False
+    raster_loaded = False
+
+    NavigationToolbar2Tk.toolitems = (
+        ('Home', 'Reset view', 'home', 'home'),
+        (None, None, None, None),
+        ('Pan', 'Pan', 'move', 'pan'),
+        ('Zoom', 'Zoom In/Out', 'zoom_to_rect', 'zoom'),
+        (None, None, None, None),
+        ('Subplots', 'Adjust subplot', 'subplots', 'configure_subplots'),
+        ('Save', 'Save figure', 'filesave', 'save_figure'),
+    )
 
     def __init__(self):
 
@@ -84,6 +84,13 @@ class GeographicInformationSystem:
                                       activebackground='lightgoldenrod3')
         self.load_raster_btn.place(relx=0.10, rely=0.16)
 
+        self.select_vector_btn = Button(self.vector_side, command=self.select_vector, text='Select a vector file',
+                                        bg='lightgoldenrod2',
+                                        activebackground='lightgoldenrod3')
+        self.select_vector_btn.place(relx=0.10, rely=0.1)
+        self.vector_path = Text(self.vector_side, state=DISABLED)
+        self.vector_path.place(relx=0.25, rely=0.1, height=25, width=250)
+
         self.root.mainloop()
 
     def select_raster(self):
@@ -101,6 +108,7 @@ class GeographicInformationSystem:
         self.raster_path.delete(1.0, END)
         self.raster_path.insert(END, self.raster_file)
         self.raster_path.config(state=DISABLED)
+        self.raster_loaded = False
 
     def bar(self, progress):
         import time
@@ -149,6 +157,18 @@ class GeographicInformationSystem:
             self.reset_bar(self.progress_raster)
 
             self.raster_loaded = True
+
+    def select_vector(self):
+        self.vector_file = filedialog.askopenfilename(initialdir="C:/Users/Desktop",
+                                                      filetypes=[('Vector files', '*.shp')],
+                                                      title='Select a vector file')
+        self.vector_path.config(state=NORMAL)
+        self.vector_path.delete(1.0, END)
+
+        self.vector_path.insert(END, self.vector_file)
+
+        self.vector_path.config(state=DISABLED)
+        self.vector_loaded = False
 
 
 if __name__ == '__main__':
