@@ -2,6 +2,7 @@ from tkinter import *
 from matplotlib.backends._backend_tk import NavigationToolbar2Tk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
+from tkinter import filedialog
 
 NavigationToolbar2Tk.toolitems = (
         ('Home', 'Reset view', 'home', 'home'),
@@ -12,6 +13,9 @@ NavigationToolbar2Tk.toolitems = (
         ('Subplots', 'Adjust subplot', 'subplots', 'configure_subplots'),
         ('Save', 'Save figure', 'filesave', 'save_figure'),
     )
+
+raster_file = None
+
 
 class GeographicInformationSystem:
 
@@ -58,11 +62,35 @@ class GeographicInformationSystem:
         self.raster_can._tkcanvas.pack(expand=False, side=BOTTOM, fill=BOTH)
         self.toolbar.update()
 
+        self.raster_path = Text(self.raster_side, state=DISABLED)
+        self.raster_path.place(relx=0.25, rely=0.1, height=25, width=250)
+
+        self.select_raster_btn = Button(self.raster_side, command=self.select_raster, text='Select a raster file',
+                                        bg='lightgoldenrod2',
+                                        activebackground='lightgoldenrod3')
+        self.select_raster_btn.place(relx=0.10, rely=0.1)
+
         self.toolbar_vec = NavigationToolbar2Tk(self.vector_can, self.vector_side)
         self.vector_can._tkcanvas.pack(padx=2, expand=False, side=BOTTOM, fill='x')
         self.toolbar_vec.update()
 
         self.root.mainloop()
+
+    def select_raster(self):
+        self.raster_file = filedialog.askopenfilename(initialdir="C:/Users/Desktop",
+                                                      filetypes=[('Raster files', '*.tif'),
+                                                                 ('Raster files', '*.jpg'),
+                                                                 ('Raster files', '*.jfif'),
+                                                                 ('Raster files', '*.gif'),
+                                                                 ('Raster files', '*.bmp'),
+                                                                 ('Raster files', '*.png'),
+                                                                 ('Raster files', '*.bat')],
+                                                      title='Select a raster file')
+
+        self.raster_path.config(state=NORMAL)
+        self.raster_path.delete(1.0, END)
+        self.raster_path.insert(END, self.raster_file)
+        self.raster_path.config(state=DISABLED)
 
 
 if __name__ == '__main__':
