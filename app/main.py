@@ -1,4 +1,6 @@
 from tkinter import *
+from tkinter.ttk import Progressbar
+
 from matplotlib.backends._backend_tk import NavigationToolbar2Tk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
@@ -73,7 +75,14 @@ class GeographicInformationSystem:
 
         self.toolbar_vec = NavigationToolbar2Tk(self.vector_can, self.vector_side)
         self.vector_can._tkcanvas.pack(padx=2, expand=False, side=BOTTOM, fill='x')
+
+        self.progress_raster = Progressbar(self.raster_side, orient=HORIZONTAL, length=250, mode='determinate')
+        self.progress_raster.place(relx=0.25, rely=0.165)
         self.toolbar_vec.update()
+        self.load_raster_btn = Button(self.raster_side, command=self.load_raster, text='Load a raster file',
+                                      bg='lightgoldenrod2',
+                                      activebackground='lightgoldenrod3')
+        self.load_raster_btn.place(relx=0.10, rely=0.16)
 
         self.root.mainloop()
 
@@ -110,6 +119,36 @@ class GeographicInformationSystem:
 
     def reset_bar(self, progress_bar):
         progress_bar['value'] = 0
+
+    def load_raster(self):
+
+        if self.raster_file is None:
+            messagebox.showerror(title='Error!',
+                                 message="No file for loading was selected!\nPlease select a file, then try again!")
+        else:
+            self.ax.cla()
+
+            import rasterio as rio
+            from rasterio.plot import show
+
+            self.fig1.subplots_adjust(bottom=0, right=1, top=1, left=0, wspace=0, hspace=0)
+            with rio.open(r'{}'.format(self.raster_file)) as src_plot:
+                show(src_plot, ax=self.ax, cmap='gist_gray')
+            plt.close()
+
+            self.ax.set(title="", xticks=[], yticks=[])
+            self.ax.spines["top"].set_visible(False)
+            self.ax.spines["right"].set_visible(False)
+            self.ax.spines["left"].set_visible(False)
+            self.ax.spines["bottom"].set_visible(False)
+
+            self.bar(self.progress_raster)
+
+            self.raster_can.draw()
+
+            self.reset_bar(self.progress_raster)
+
+            self.raster_loaded = True
 
 
 if __name__ == '__main__':
