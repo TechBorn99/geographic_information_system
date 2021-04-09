@@ -1,11 +1,15 @@
 from tkinter import *
 from tkinter.ttk import Progressbar
-
+import shapefile
 from matplotlib.backends._backend_tk import NavigationToolbar2Tk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 from tkinter import filedialog, messagebox
 import matplotlib.pyplot as plt
+import numpy as np
+import geopandas as gpd
+from descartes import PolygonPatch
+
 
 class GeographicInformationSystem:
 
@@ -90,6 +94,12 @@ class GeographicInformationSystem:
         self.select_vector_btn.place(relx=0.10, rely=0.1)
         self.vector_path = Text(self.vector_side, state=DISABLED)
         self.vector_path.place(relx=0.25, rely=0.1, height=25, width=250)
+        self.load_vector_btn = Button(self.vector_side, command=self.load_vector, text='Load a vector file',
+                                      bg='lightgoldenrod2',
+                                      activebackground='lightgoldenrod3')
+        self.load_vector_btn.place(relx=0.10, rely=0.16)
+        self.progress_vector = Progressbar(self.vector_side, orient=HORIZONTAL, length=250, mode='determinate')
+        self.progress_vector.place(relx=0.25, rely=0.165)
 
         self.root.mainloop()
 
@@ -169,6 +179,53 @@ class GeographicInformationSystem:
 
         self.vector_path.config(state=DISABLED)
         self.vector_loaded = False
+
+    def load_vector(self):
+        if self.vector_file == '':
+            messagebox.showerror(title='Error!',
+                                 message="No file for loading was selected!\nPlease select a file, then try again!")
+        else:
+            self.a.cla()
+
+            self.vector = gpd.read_file(self.vector_file, crs="EPSG:4326")
+            self.vector.plot()
+            sf = shapefile.Reader(self.vector_file)
+            if all(row['geometry'].geom_type == 'Point' or row['geometry'].geom_type == 'MultiPoint' for index, row in
+                   self.vector.iterrows()):
+                points = [np.array((shape.shape.points[0][0], shape.shape.points[0][1])) for shape in sf.shapeRecords()]
+                self.a.plot([point[0] for point in points], [point[1] for point in points], 'o', color='red',
+                            markersize=4)
+                self.vector_loaded = True
+            elif all(row['geometry'].geom_type == 'LineString' or row['geometry'].geom_type == 'MultiLineString' for
+                     index, row in self.vector.iterrows()):
+                for line in self.vector['geometry']:
+                    if line.geom_type == 'MultiLineString':
+                        for li in line:
+                            self.a.plot(*li.xy)
+                    elif line.geom_type == 'LineString':
+                        self.a.plot(*line.xy)
+                self.vector_loaded = True
+            elif all(
+                    row['geometry'].geom_type == 'Polygon' or row['geometry'].geom_type == 'MultiPolygon' for index, row
+                    in self.vector.iterrows()):
+                for polygon in self.vector['geometry']:
+                    if polygon.geom_type == 'MultiPolygon':
+                        for pol in polygon:
+                            self.a.plot(*pol.exterior.xy)
+                            patch = PolygonPatch(pol, alpha=0.5)
+                            self.a.add_patch(patch)
+                    elif polygon.geom_type == 'Polygon':
+                        self.a.plot(*polygon.exterior.xy)
+                self.vector_loaded = True
+            else:
+                messagebox.showerror(title='Error!',
+                                     message="Unsupported geometry detected...")
+                return
+
+            self.bar(self.progress_vector)
+
+            self.vector_can.draw()
+            self.reset_bar(self.progress_vector)
 
 
 if __name__ == '__main__':
