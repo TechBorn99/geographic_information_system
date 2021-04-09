@@ -2,7 +2,8 @@ from tkinter import *
 from matplotlib.backends._backend_tk import NavigationToolbar2Tk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
-from tkinter import filedialog
+from tkinter import filedialog, messagebox
+import matplotlib.pyplot as plt
 
 NavigationToolbar2Tk.toolitems = (
         ('Home', 'Reset view', 'home', 'home'),
@@ -91,6 +92,24 @@ class GeographicInformationSystem:
         self.raster_path.delete(1.0, END)
         self.raster_path.insert(END, self.raster_file)
         self.raster_path.config(state=DISABLED)
+
+    def bar(self, progress):
+        import time
+        progress['value'] = 20
+
+        self.root.update_idletasks()
+        time.sleep(0.2)
+
+        progress['value'] = 40
+        self.root.update_idletasks()
+        time.sleep(0.1)
+        progress['value'] = 80
+        self.root.update_idletasks()
+        time.sleep(0.2)
+        progress['value'] = 100
+
+    def reset_bar(self, progress_bar):
+        progress_bar['value'] = 0
 
 
 if __name__ == '__main__':
