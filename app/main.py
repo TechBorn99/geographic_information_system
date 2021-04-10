@@ -9,6 +9,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import geopandas as gpd
 from descartes import PolygonPatch
+from shapely.geometry import Point
+import pandas as pd
 
 
 class GeographicInformationSystem:
@@ -25,6 +27,7 @@ class GeographicInformationSystem:
     vector_loaded = False
     raster_loaded = False
     vector = None
+    csv_destination = ''
 
     NavigationToolbar2Tk.toolitems = (
         ('Home', 'Reset view', 'home', 'home'),
@@ -114,6 +117,9 @@ class GeographicInformationSystem:
                                         bg='lightgoldenrod2',
                                         activebackground='lightgoldenrod3')
         self.clear_vector_data.place(relx=0.89, rely=0.22)
+        load_csv_image = PhotoImage(file=r'.\resources\load_csv.gif')
+        self.load_csv_btn = Button(self.raster_side, image=load_csv_image, command=self.load_csv_data)
+        self.load_csv_btn.place(relx=0.0, rely=0.0, width=32, height=32)
 
         self.root.mainloop()
 
@@ -259,6 +265,27 @@ class GeographicInformationSystem:
         else:
             messagebox.showerror(title='Error!',
                                  message="No data for clearing!")
+
+    def load_csv_data(self):
+        self.csv_destination = filedialog.askopenfilename(initialdir="C:/Users/Desktop",
+                                                          filetypes=[('CSV files', '*.csv')],
+                                                          title='Select a CSV file')
+        if self.csv_destination != '':
+            try:
+                self.a.cla()
+                self.vector_file = None
+                df = pd.read_csv(self.csv_destination)
+                self.geometry = [Point(xyz) for xyz in zip(df.iloc[:, 0], df.iloc[:, 1], df.iloc[:, 2])]
+                plotted_points = [np.array((geom.xy[0][0], geom.xy[1][0])) for geom in self.geometry]
+                self.a.plot([point[0] for point in plotted_points], [point[1] for point in plotted_points], 'o',
+                            color='red', markersize=4)
+                self.vector_can.draw()
+            except:
+                messagebox.showerror(title='Error!',
+                                     message="Selected file or it's data are not supported!")
+        else:
+            messagebox.showwarning(title='Warning!',
+                                   message="No file was selected!")
 
 
 if __name__ == '__main__':
