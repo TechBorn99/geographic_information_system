@@ -11,6 +11,7 @@ import geopandas as gpd
 from descartes import PolygonPatch
 from shapely.geometry import Point
 import pandas as pd
+from scipy.spatial.qhull import Delaunay
 
 
 class GeographicInformationSystem:
@@ -120,6 +121,10 @@ class GeographicInformationSystem:
         load_csv_image = PhotoImage(file=r'.\resources\load_csv.gif')
         self.load_csv_btn = Button(self.raster_side, image=load_csv_image, command=self.load_csv_data)
         self.load_csv_btn.place(relx=0.0, rely=0.0, width=32, height=32)
+        delaunay_triangulation_image = PhotoImage(file=r'.\resources\delaunay_triangulation_icon.gif')
+        self.delaunay_triangulation_btn = Button(self.raster_side, image=delaunay_triangulation_image,
+                                                 command=self.delaunay_triangulation)
+        self.delaunay_triangulation_btn.place(relx=0.045, rely=0.0, width=32, height=32)
 
         self.root.mainloop()
 
@@ -286,6 +291,45 @@ class GeographicInformationSystem:
         else:
             messagebox.showwarning(title='Warning!',
                                    message="No file was selected!")
+
+    def delaunay_triangulation(self):
+        if self.vector_file is not None or self.csv_destination != '':
+            display_triangulation = Toplevel(self.root)
+            display_triangulation.title('Delaunay\'s triangulation')
+            display_triangulation.iconbitmap(r".\resources\flaticon.ico")
+            display_triangulation.geometry('600x500')
+            display_triangulation.resizable(0, 0)
+            fig = Figure(figsize=(6, 5), dpi=100)
+            canvas = FigureCanvasTkAgg(figure=fig, master=display_triangulation)
+            canvas.get_tk_widget().place(relx=0, rely=0, height=500, width=600)
+            tb = NavigationToolbar2Tk(canvas, display_triangulation)
+            tb.update()
+            axe = fig.add_subplot(111)
+            points = []
+            if self.vector_file is not None:
+                if self.vector_loaded:
+                    if all(row['geometry'].geom_type == 'Point' or row['geometry'].geom_type == 'MultiPoint' for
+                           index, row
+                           in self.vector.iterrows()):
+                        sf = shapefile.Reader(self.vector_file)
+                        points = [np.array((shape.shape.points[0][0], shape.shape.points[0][1])) for shape in
+                                  sf.shapeRecords()]
+                    else:
+                        display_triangulation.destroy()
+                        messagebox.showerror(title='Error!',
+                                             message="Selected file contains geometry other than Point/MultiPoint!")
+                        return
+                else:
+                    display_triangulation.destroy()
+                    messagebox.showerror(title='Error!',
+                                         message="Selected vector file is not loaded!")
+                    return
+            elif self.csv_destination != '':
+                points = [np.array((geom.xy[0][0], geom.xy[1][0])) for geom in self.geometry]
+            delaunay_points = Delaunay(points)
+            axe.triplot([point[0] for point in points], [point[1] for point in points], delaunay_points.simplices)
+            axe.plot([point[0] for point in points], [point[1] for point in points], 'o', color='red', markersize=3)
+            canvas.draw()
 
 
 if __name__ == '__main__':
