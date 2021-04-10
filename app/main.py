@@ -21,8 +21,10 @@ class GeographicInformationSystem:
     a = fig2.add_subplot(111)
     ax = fig1.add_subplot(111)
     raster_file = None
+    vector_file = None
     vector_loaded = False
     raster_loaded = False
+    vector = None
 
     NavigationToolbar2Tk.toolitems = (
         ('Home', 'Reset view', 'home', 'home'),
@@ -100,6 +102,13 @@ class GeographicInformationSystem:
         self.load_vector_btn.place(relx=0.10, rely=0.16)
         self.progress_vector = Progressbar(self.vector_side, orient=HORIZONTAL, length=250, mode='determinate')
         self.progress_vector.place(relx=0.25, rely=0.165)
+        self.vector_attributes_text = Text(self.vector_side, state=DISABLED, width=72, height=3)
+        self.vector_attributes_text.place(relx=0.11, rely=0.22)
+        self.display_vector_data = Button(self.vector_side, command=self.show_vector_data,
+                                          text='Display\nvector\ndata',
+                                          bg='lightgoldenrod2',
+                                          activebackground='lightgoldenrod3')
+        self.display_vector_data.place(relx=0.02, rely=0.22)
 
         self.root.mainloop()
 
@@ -226,6 +235,16 @@ class GeographicInformationSystem:
 
             self.vector_can.draw()
             self.reset_bar(self.progress_vector)
+
+    def show_vector_data(self):
+        if self.vector is not None:
+            self.vector_attributes_text.config(state=NORMAL)
+            self.vector_attributes_text.delete(1.0, END)
+            self.vector_attributes_text.insert(END, self.vector)
+            self.vector_attributes_text.config(state=DISABLED)
+        else:
+            messagebox.showerror(title='Error!',
+                                 message="No data for displaying!")
 
 
 if __name__ == '__main__':
