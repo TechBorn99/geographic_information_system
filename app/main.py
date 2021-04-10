@@ -109,6 +109,11 @@ class GeographicInformationSystem:
                                           bg='lightgoldenrod2',
                                           activebackground='lightgoldenrod3')
         self.display_vector_data.place(relx=0.02, rely=0.22)
+        self.clear_vector_data = Button(self.vector_side, command=self.clear_vector_data,
+                                        text='Clear\nvector\ndata',
+                                        bg='lightgoldenrod2',
+                                        activebackground='lightgoldenrod3')
+        self.clear_vector_data.place(relx=0.89, rely=0.22)
 
         self.root.mainloop()
 
@@ -245,6 +250,15 @@ class GeographicInformationSystem:
         else:
             messagebox.showerror(title='Error!',
                                  message="No data for displaying!")
+
+    def clear_vector_data(self):
+        if self.vector_attributes_text.get(1.0, END) != '':
+            self.vector_attributes_text.config(state=NORMAL)
+            self.vector_attributes_text.delete(1.0, END)
+            self.vector_attributes_text.config(state=DISABLED)
+        else:
+            messagebox.showerror(title='Error!',
+                                 message="No data for clearing!")
 
 
 if __name__ == '__main__':
