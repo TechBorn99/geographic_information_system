@@ -11,7 +11,7 @@ import geopandas as gpd
 from descartes import PolygonPatch
 from shapely.geometry import Point
 import pandas as pd
-from scipy.spatial.qhull import Delaunay
+from scipy.spatial.qhull import Delaunay, ConvexHull
 
 
 class GeographicInformationSystem:
@@ -125,6 +125,10 @@ class GeographicInformationSystem:
         self.delaunay_triangulation_btn = Button(self.raster_side, image=delaunay_triangulation_image,
                                                  command=self.delaunay_triangulation)
         self.delaunay_triangulation_btn.place(relx=0.045, rely=0.0, width=32, height=32)
+        polygon_image = PhotoImage(file=r'.\resources\polygon.gif')
+        self.convex_hull_polygon_btn = Button(self.raster_side, image=polygon_image,
+                                              command=self.convex_hull_polygon)
+        self.convex_hull_polygon_btn.place(relx=0.09, rely=0.0, width=32, height=32)
 
         self.root.mainloop()
 
@@ -328,6 +332,45 @@ class GeographicInformationSystem:
                 points = [np.array((geom.xy[0][0], geom.xy[1][0])) for geom in self.geometry]
             delaunay_points = Delaunay(points)
             axe.triplot([point[0] for point in points], [point[1] for point in points], delaunay_points.simplices)
+            axe.plot([point[0] for point in points], [point[1] for point in points], 'o', color='red', markersize=3)
+            canvas.draw()
+
+    def convex_hull_polygon(self):
+        if self.vector_file is not None or self.csv_destination != '':
+            display_conhull = Toplevel(self.root)
+            display_conhull.title('Convex Hull Polygon')
+            display_conhull.iconbitmap(r".\resources\flaticon.ico")
+            display_conhull.geometry('600x500')
+            display_conhull.resizable(0, 0)
+            fig = Figure(figsize=(6, 5), dpi=100)
+            canvas = FigureCanvasTkAgg(figure=fig, master=display_conhull)
+            canvas.get_tk_widget().place(relx=0, rely=0, height=500, width=600)
+            tb = NavigationToolbar2Tk(canvas, display_conhull)
+            tb.update()
+            axe = fig.add_subplot(111)
+            points = []
+            if self.vector_file is not None:
+                if self.vector_loaded:
+                    if all(row['geometry'].geom_type == 'Point' or row['geometry'].geom_type == 'MultiPoint' for
+                           index, row in self.vector.iterrows()):
+                        sf = shapefile.Reader(self.vector_file)
+                        points = np.array(
+                            [[shape.shape.points[0][0], shape.shape.points[0][1]] for shape in sf.shapeRecords()])
+                    else:
+                        display_conhull.destroy()
+                        messagebox.showerror(title='Error!',
+                                             message="Selected file contains geometry other than Point/MultiPoint!")
+                        return
+                else:
+                    display_conhull.destroy()
+                    messagebox.showerror(title='Error!',
+                                         message="Selected vector file is not loaded!")
+                    return
+            elif self.csv_destination != '':
+                points = np.array([[geom.xy[0][0], geom.xy[1][0]] for geom in self.geometry])
+            hull = ConvexHull(points)
+            for simplex in hull.simplices:
+                axe.plot(points[simplex, 0], points[simplex, 1], color='k')
             axe.plot([point[0] for point in points], [point[1] for point in points], 'o', color='red', markersize=3)
             canvas.draw()
 
