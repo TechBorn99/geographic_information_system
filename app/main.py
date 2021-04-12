@@ -470,6 +470,24 @@ class GeographicInformationSystem:
         closest_dist = distances[0]
         return (closest, closest_dist)
 
+    def nearest_neighbor(self, left_gdf, right_gdf, return_dist=False):
+        left_geom_col = left_gdf.geometry.name
+        right_geom_col = right_gdf.geometry.name
+        right = right_gdf.copy().reset_index(drop=True)
+        left_radians = np.array(
+            left_gdf[left_geom_col].apply(lambda geom: (geom.x * np.pi / 180, geom.y * np.pi / 180)).to_list())
+        right_radians = np.array(
+            right[right_geom_col].apply(lambda geom: (geom.x * np.pi / 180, geom.y * np.pi / 180)).to_list())
+
+        closest, dist = self.get_nearest(src_points=left_radians, candidates=right_radians)
+        closest_points = right.loc[closest]
+        closest_points = closest_points.reset_index(drop=True)
+        if return_dist:
+            earth_radius = 6371000
+            closest_points['distance'] = dist * earth_radius
+
+        return closest_points
+
 
 if __name__ == '__main__':
     start = GeographicInformationSystem()
