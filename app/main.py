@@ -1,6 +1,7 @@
 from tkinter import *
 from tkinter.ttk import Progressbar
 import shapefile
+from geopandas import GeoDataFrame, points_from_xy
 from matplotlib.backends._backend_tk import NavigationToolbar2Tk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
@@ -410,10 +411,55 @@ class GeographicInformationSystem:
                 nearest_neighbor_dataframe = pd.DataFrame(
                     {'x': list([float(x_coordinate_txt.get())]), 'y': list([float(y_coordinate_txt.get())])})
                 window.destroy()
-                #self.nearest_neighbor_search(nearest_neighbor_dataframe)
             except:
                 messagebox.showerror(title='Error!',
                                      message="Unsupported data type entered in one or more fields!")
+
+    def nearest_neighbor_search(self, nn_df):
+        nn_search = Toplevel(self.root)
+        nn_search.title('Nearest Neighbor Search')
+        nn_search.iconbitmap(r".\resources\flaticon.ico")
+        nn_search.geometry('600x500')
+        nn_search.resizable(0, 0)
+        fig = Figure(figsize=(6, 5), dpi=100)
+        canvas = FigureCanvasTkAgg(figure=fig, master=nn_search)
+        canvas.get_tk_widget().place(relx=0, rely=0, height=500, width=600)
+        tb = NavigationToolbar2Tk(canvas, nn_search)
+        tb.update()
+        axe = fig.add_subplot(111)
+        input_point = GeoDataFrame(nn_df, geometry=points_from_xy(nn_df.x, nn_df.y))
+        gdf = None
+        if self.vector_file is not None:
+            if self.vector_loaded:
+                if all(row['geometry'].geom_type == 'Point' or row['geometry'].geom_type == 'MultiPoint' for index, row
+                       in
+                       self.vector.iterrows()):
+                    gdf = gpd.read_file(self.vector_file)
+                else:
+                    nn_search.destroy()
+                    messagebox.showerror(title='Error!',
+                                         message="Selected file contains geometry other than Point/MultiPoint!")
+                    return
+            else:
+                nn_search.destroy()
+                messagebox.showerror(title='Error!',
+                                     message="Selected vector file is not loaded!")
+                return
+        elif self.csv_destination != '':
+            df = pd.read_csv(self.csv_destination)
+            geometry = [Point(xy) for xy in zip(df.iloc[:, 0], df.iloc[:, 1])]
+            gdf = GeoDataFrame(df, geometry=geometry)
+        # closest_point = self.nearest_neighbor(input_point, gdf, return_dist=True)
+        # for row in gdf['geometry']:
+        #     if closest_point['geometry'][0] == row:
+        #
+        #         axe.plot(row.x, row.y, 'o', color='green', markersize=6)
+        #     else:
+        #         axe.plot(row.x, row.y, 'o', color='red', markersize=3)
+        # canvas.draw()
+        # messagebox.showinfo(title='Result',
+        #                     message="Distance between the entered point and it's closest neighbor is: {} meters.".format(
+        #                         closest_point['distance'][0]))
 
 
 if __name__ == '__main__':
