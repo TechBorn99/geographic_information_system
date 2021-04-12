@@ -129,6 +129,10 @@ class GeographicInformationSystem:
         self.convex_hull_polygon_btn = Button(self.raster_side, image=polygon_image,
                                               command=self.convex_hull_polygon)
         self.convex_hull_polygon_btn.place(relx=0.09, rely=0.0, width=32, height=32)
+        nearest_neighbor_search_image = PhotoImage(file=r'.\resources\nearest_neighbor.gif')
+        self.nearest_neighbor_search_btn = Button(self.raster_side, image=nearest_neighbor_search_image,
+                                                  command=self.nearest_neighbor_input)
+        self.nearest_neighbor_search_btn.place(relx=0.135, rely=0.0, width=32, height=32)
 
         self.root.mainloop()
 
@@ -373,6 +377,43 @@ class GeographicInformationSystem:
                 axe.plot(points[simplex, 0], points[simplex, 1], color='k')
             axe.plot([point[0] for point in points], [point[1] for point in points], 'o', color='red', markersize=3)
             canvas.draw()
+
+    def nearest_neighbor_input(self):
+        if self.vector_file is not None or self.csv_destination != '':
+            entry = Toplevel(self.root)
+            entry.geometry('220x70')
+            entry.title('Insert coordinates')
+            entry.iconbitmap(r".\resources\flaticon.ico")
+            entry.resizable(0, 0)
+            Label(entry, text="X coordinate:").grid(row=0)
+            Label(entry, text="Y coordinate:").grid(row=1)
+            global x_coordinate_txt, y_coordinate_txt
+            x_coordinate_txt = StringVar(entry)
+            y_coordinate_txt = StringVar(entry)
+            x_entry = Entry(entry, textvariable=x_coordinate_txt)
+            y_entry = Entry(entry, textvariable=y_coordinate_txt)
+            x_entry.grid(row=0, column=1)
+            y_entry.grid(row=1, column=1)
+            Button(entry, text='OK', command=lambda: self.check_data(entry)).grid(row=3, column=1, sticky=W,
+                                                                                  pady=4, padx=20)
+            Button(entry, text='Cancel', command=entry.destroy).grid(row=3, column=0, sticky=W, pady=4, padx=20)
+        else:
+            messagebox.showerror(title='Error!',
+                                 message="No file was selected!")
+
+    def check_data(self, window):
+        if x_coordinate_txt.get() == '' or y_coordinate_txt.get() == '':
+            messagebox.showerror(title='Error!',
+                                 message="One or more fields have not been filled!")
+        else:
+            try:
+                nearest_neighbor_dataframe = pd.DataFrame(
+                    {'x': list([float(x_coordinate_txt.get())]), 'y': list([float(y_coordinate_txt.get())])})
+                window.destroy()
+                #self.nearest_neighbor_search(nearest_neighbor_dataframe)
+            except:
+                messagebox.showerror(title='Error!',
+                                     message="Unsupported data type entered in one or more fields!")
 
 
 if __name__ == '__main__':
