@@ -449,17 +449,26 @@ class GeographicInformationSystem:
             df = pd.read_csv(self.csv_destination)
             geometry = [Point(xy) for xy in zip(df.iloc[:, 0], df.iloc[:, 1])]
             gdf = GeoDataFrame(df, geometry=geometry)
-        # closest_point = self.nearest_neighbor(input_point, gdf, return_dist=True)
-        # for row in gdf['geometry']:
-        #     if closest_point['geometry'][0] == row:
-        #
-        #         axe.plot(row.x, row.y, 'o', color='green', markersize=6)
-        #     else:
-        #         axe.plot(row.x, row.y, 'o', color='red', markersize=3)
-        # canvas.draw()
-        # messagebox.showinfo(title='Result',
-        #                     message="Distance between the entered point and it's closest neighbor is: {} meters.".format(
-        #                         closest_point['distance'][0]))
+        closest_point = self.nearest_neighbor(input_point, gdf, return_dist=True)
+        for row in gdf['geometry']:
+            if closest_point['geometry'][0] == row:
+
+                axe.plot(row.x, row.y, 'o', color='green', markersize=6)
+            else:
+                axe.plot(row.x, row.y, 'o', color='red', markersize=3)
+        canvas.draw()
+        messagebox.showinfo(title='Result',
+                            message="Distance between the entered point and it's closest neighbor is: {} meters.".format(
+                                closest_point['distance'][0]))
+
+    def get_nearest(self, src_points, candidates, k_neighbors=1):
+        tree = BallTree(candidates, leaf_size=15, metric='haversine')
+        distances, indices = tree.query(src_points, k=k_neighbors)
+        distances = distances.transpose()
+        indices = indices.transpose()
+        closest = indices[0]
+        closest_dist = distances[0]
+        return (closest, closest_dist)
 
 
 if __name__ == '__main__':
