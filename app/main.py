@@ -14,6 +14,8 @@ from shapely.geometry import Point
 import pandas as pd
 from scipy.spatial.qhull import Delaunay, ConvexHull
 from sklearn.neighbors import BallTree
+import math
+import geopy.distance
 
 
 class GeographicInformationSystem:
@@ -31,6 +33,10 @@ class GeographicInformationSystem:
     raster_loaded = False
     vector = None
     csv_destination = ''
+    num_of_clicks_raster = 0
+    connection_raster = None
+    distance_ras = 0
+    point1_ras = point2_ras = None
 
     NavigationToolbar2Tk.toolitems = (
         ('Home', 'Reset view', 'home', 'home'),
@@ -136,7 +142,58 @@ class GeographicInformationSystem:
                                                   command=self.nearest_neighbor_input)
         self.nearest_neighbor_search_btn.place(relx=0.135, rely=0.0, width=32, height=32)
 
+        ruler_image = PhotoImage(file=r'.\resources\ruler.gif')
+        self.calculate_distance_btn = Button(self.raster_side, image=ruler_image,
+                                             command=self.calculate_distance_raster)
+        self.calculate_distance_btn.place(relx=0.03, rely=0.25, width=32, height=32)
+
+        self.raster_distance_lbl = Label(self.raster_side, text='', bg='lightgoldenrod1')
+        self.raster_distance_lbl.place(relx=0.1, rely=0.255)
+
         self.root.mainloop()
+
+    def calculate_distance_raster(self):
+        if self.raster_file is not None:
+            if self.raster_loaded:
+                self.raster_distance_lbl.config(text='Enter the first point by clicking on the canvas...')
+                self.raster_distance_lbl.update()
+                self.connection_raster = self.raster_can.mpl_connect('button_press_event',
+                                                                     self.get_click_coordinates_raster)
+            else:
+                messagebox.showerror(title='Error!',
+                                     message="Raster file was not loaded!")
+
+        else:
+            messagebox.showerror(title='Error!',
+                                 message="Raster file was not selected!")
+
+    def get_click_coordinates_raster(self, event):
+        self.num_of_clicks_raster += 1
+        if self.num_of_clicks_raster == 1:
+            self.point1_ras = (event.ydata, event.xdata)
+            self.raster_distance_lbl.config(text='Enter the second point by clicking on the canvas...')
+            self.raster_distance_lbl.update()
+        elif self.num_of_clicks_raster == 2:
+            self.point2_ras = (event.ydata, event.xdata)
+            self.raster_can.mpl_disconnect(self.connection_raster)
+            try:
+                self.distance_ras = geopy.distance.distance(self.point1_ras,
+                                                            self.point2_ras).m
+            except:
+                self.distance_ras = math.sqrt(
+                    ((self.point1_ras[0] - self.point2_ras[0]) ** 2) + (
+                            (self.point1_ras[1] - self.point2_ras[1]) ** 2))
+            self.raster_distance_lbl.config(
+                text='Distance between the two entered points in meters is:\n{}'.format(self.distance_ras))
+            self.raster_distance_lbl.update()
+            point1 = [self.point1_ras[0], event.xdata]
+            point2 = [self.point1_ras[1], event.ydata]
+            x_values = [point2[0], point1[1]]
+            y_values = [point1[0], point2[1]]
+
+            self.ax.plot(x_values, y_values, markersize=4)
+            self.raster_can.draw()
+            self.num_of_clicks_raster = 0
 
     def select_raster(self):
         self.raster_file = filedialog.askopenfilename(initialdir="C:/Users/Desktop",
