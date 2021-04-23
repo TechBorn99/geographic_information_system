@@ -158,9 +158,22 @@ class GeographicInformationSystem:
                                                     command=self.calculate_distance_vector)
         self.calculate_distance_vector_btn.place(relx=0.6, rely=0.093, width=32, height=32)
 
+        about_image = PhotoImage(file=r'.\resources\about.gif')
+        self.about_btn = Button(self.raster_side, image=about_image, command=self.about)
+        self.about_btn.place(relx=0.18, rely=0.0, width=32, height=32)
 
+        exit_image = PhotoImage(file=r'.\resources\exit.gif')
+        self.exit_btn = Button(self.raster_side, image=exit_image, command=self.exit)
+        self.exit_btn.place(relx=0.225, rely=0.0, width=32, height=32)
 
         self.root.mainloop()
+
+    def about(self):
+        messagebox.showinfo(title='About the program',
+                            message="This program is a geographic information system created by Stefan Radojević.")
+
+    def exit(self):
+        self.root.destroy()
 
     def calculate_distance_vector(self):
         if self.vector_file is not None:
