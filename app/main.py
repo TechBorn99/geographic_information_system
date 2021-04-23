@@ -35,8 +35,10 @@ class GeographicInformationSystem:
     csv_destination = ''
     num_of_clicks_raster = 0
     connection_raster = None
-    distance_ras = 0
-    point1_ras = point2_ras = None
+    distance_vec = distance_ras = 0
+    point1_vec = point2_vec = point1_ras = point2_ras = None
+    num_of_clicks_vector = 0
+    connection_vector = None
 
     NavigationToolbar2Tk.toolitems = (
         ('Home', 'Reset view', 'home', 'home'),
@@ -149,8 +151,61 @@ class GeographicInformationSystem:
 
         self.raster_distance_lbl = Label(self.raster_side, text='', bg='lightgoldenrod1')
         self.raster_distance_lbl.place(relx=0.1, rely=0.255)
+        self.vector_distance_lbl = Label(self.vector_side, text='', bg='lightgoldenrod1')
+        self.vector_distance_lbl.place(relx=0.6, rely=0.15)
+
+        self.calculate_distance_vector_btn = Button(self.vector_side, image=ruler_image,
+                                                    command=self.calculate_distance_vector)
+        self.calculate_distance_vector_btn.place(relx=0.6, rely=0.093, width=32, height=32)
+
+
 
         self.root.mainloop()
+
+    def calculate_distance_vector(self):
+        if self.vector_file is not None:
+            if self.vector_loaded:
+                self.vector_distance_lbl.config(text='Enter the first point by clicking on the canvas...')
+
+                self.vector_distance_lbl.update()
+
+                self.connection_vector = self.vector_can.mpl_connect('button_press_event',
+                                                                     self.get_click_coordinates_vector)
+
+                self.load_csv_btn.config(state=DISABLED)
+            else:
+                messagebox.showerror(title='Error!',
+                                     message="Vector file is not loaded!")
+        else:
+            messagebox.showerror(title='Error!',
+                                 message="No vector file was selected!")
+
+    def get_click_coordinates_vector(self, event):
+        self.num_of_clicks_vector += 1
+        if self.num_of_clicks_vector == 1:
+            self.point1_vec = (event.ydata, event.xdata)
+            self.vector_distance_lbl.config(text='Enter the second point by clicking on the canvas...')
+            self.vector_distance_lbl.update()
+
+        elif self.num_of_clicks_vector == 2:
+            self.point2_vec = (event.ydata, event.xdata)
+            self.vector_can.mpl_disconnect(self.connection_vector)
+            try:
+                self.distance_vec = geopy.distance.distance(self.point1_vec, self.point2_vec).m
+            except:
+                self.distance_vec = math.sqrt(
+                    ((self.point1_vec[0] - self.point2_vec[0]) ** 2) + ((self.point1_vec[1] - self.point2_vec[1]) ** 2))
+            self.vector_distance_lbl.config(
+                text='Distance between the two entered points in meters is:\n{}'.format(self.distance_vec))
+            self.vector_distance_lbl.update()
+            point1 = [self.point1_vec[0], event.xdata]
+            point2 = [self.point1_vec[1], event.ydata]
+            x_values = [point2[0], point1[1]]
+            y_values = [point1[0], point2[1]]
+            self.a.plot(x_values, y_values, markersize=4)
+            self.vector_can.draw()
+            self.num_of_clicks_vector = 0
+            self.load_csv_btn.config(state=NORMAL)
 
     def calculate_distance_raster(self):
         if self.raster_file is not None:
