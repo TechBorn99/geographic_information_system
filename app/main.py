@@ -19,6 +19,15 @@ from shapely.geometry import Point
 import geopy.distance
 
 
+def about():
+    """
+    Method that is called when the about_btn is clicked.
+    It displays basic information about the application.
+    """
+    messagebox.showinfo(title='About the program',
+                        message="This program is a geographic information system created by Stefan Radojević.")
+
+
 class GeographicInformationSystem:
     """
     Main class of the application. It contains variables and methods that enables the functionalities:
@@ -146,7 +155,7 @@ class GeographicInformationSystem:
 
         # Creating and adding of the 'About' button
         about_image = PhotoImage(file=r'.\resources\about.gif')
-        self.about_btn = Button(self.raster_side, image=about_image, command=self.about)
+        self.about_btn = Button(self.raster_side, image=about_image, command=about)
         self.about_btn.place(relx=0.18, rely=0.0, width=32, height=32)
 
         # Creating and adding of the 'Exit' button
@@ -217,11 +226,13 @@ class GeographicInformationSystem:
         self.vector_can = FigureCanvasTkAgg(self.fig2, master=self.vector_side)
         self.vector_can.get_tk_widget().place(relx=0.005, rely=0.3, height=535, width=740)
 
-        # Creating and adding of the progressbar of the uploading of the file to the canvas for displaying the raster files
+        # Creating and adding of the progressbar of the uploading of the file to the canvas for displaying the raster
+        # files
         self.progress_raster = Progressbar(self.raster_side, orient=HORIZONTAL, length=250, mode='determinate')
         self.progress_raster.place(relx=0.25, rely=0.165)
 
-        # Creating and adding of the progressbar of the uploading of the file to the canvas for displaying the shapefiles
+        # Creating and adding of the progressbar of the uploading of the file to the canvas for displaying the
+        # shapefiles
         self.progress_vector = Progressbar(self.vector_side, orient=HORIZONTAL, length=250, mode='determinate')
         self.progress_vector.place(relx=0.25, rely=0.165)
 
@@ -430,7 +441,8 @@ class GeographicInformationSystem:
             self.vector = gpd.read_file(self.vector_file, crs="EPSG:4326")
             self.vector.plot()
 
-            # Read the selected shapefile with shapefile Reader (it will be used for the conditions in the steps that follow)
+            # Read the selected shapefile with shapefile Reader (it will be used for the conditions in the steps that
+            # follow)
             sf = shapefile.Reader(self.vector_file)
 
             # Check whether the shapefile geometry is made up of Points/MultiPoints, LineStrings/MultiLineStrings or
@@ -600,7 +612,8 @@ class GeographicInformationSystem:
                 # Create the geometry, which will be used when creating a GeoDataFrame out of a pandas DataFrame
                 self.geometry = [Point(xyz) for xyz in zip(df.iloc[:, 0], df.iloc[:, 1], df.iloc[:, 2])]
 
-                # Create a GeoDataFrame out of a pandas DataFrame, using the made geometry and set the crs to "EPSG:4326"
+                # Create a GeoDataFrame out of a pandas DataFrame, using the made geometry and set the crs to
+                # "EPSG:4326"
                 # points = GeoDataFrame(df, crs="EPSG:4326", geometry=self.geometry)
                 # points.plot(color='red', marker='o', markersize=3)
 
@@ -692,7 +705,8 @@ class GeographicInformationSystem:
                                              message="Selected file contains geometry other than Point/MultiPoint!")
                         return
 
-                # If it is not loaded, cancel the operation, close the newly created Toplevel window and display an error message
+                # If it is not loaded, cancel the operation, close the newly created Toplevel window and display an
+                # error message
                 else:
                     display_triangulation.destroy()
                     messagebox.showerror(title='Error!',
@@ -778,7 +792,8 @@ class GeographicInformationSystem:
                         messagebox.showerror(title='Error!',
                                              message="Selected file contains geometry other than Point/MultiPoint!")
                         return
-                # If it is not loaded, cancel the operation, close the newly created Toplevel window and display an error message
+                # If it is not loaded, cancel the operation, close the newly created Toplevel window and display an
+                # error message
                 else:
                     display_conhull.destroy()
                     messagebox.showerror(title='Error!',
@@ -825,7 +840,8 @@ class GeographicInformationSystem:
             Label(entry, text="X coordinate:").grid(row=0)
             Label(entry, text="Y coordinate:").grid(row=1)
 
-            # Make widgets x_coordinate_txt and y_coordinate_txt global, so they can be accessed from outside this method
+            # Make widgets x_coordinate_txt and y_coordinate_txt global, so they can be accessed from outside this
+            # method
             global x_coordinate_txt, y_coordinate_txt
 
             # Create StringVar-s which will store text entered into the text boxes
@@ -838,7 +854,8 @@ class GeographicInformationSystem:
             x_entry.grid(row=0, column=1)
             y_entry.grid(row=1, column=1)
 
-            # Create and add the two buttons which close the Toplevel window or accept the entered text inside the two entries
+            # Create and add the two buttons which close the Toplevel window or accept the entered text inside the two
+            # entries
             Button(entry, text='OK', command=lambda: self.check_data(entry)).grid(row=3, column=1, sticky=W,
                                                                                   pady=4, padx=20)
             Button(entry, text='Cancel', command=entry.destroy).grid(row=3, column=0, sticky=W, pady=4, padx=20)
@@ -881,7 +898,8 @@ class GeographicInformationSystem:
     def nearest_neighbor_search(self, nn_df):
         """
         Method that is called when the entered data is valid.
-        It is used for calling the method that finds the closest point and plots it and displays it inside of a new canvas.
+        It is used for calling the method that finds the closest point and plots it and displays it inside of a new
+        canvas.
         :param nn_df: DataFrame that contains only x and y coordinates
         """
         # Create the Toplevel window
@@ -940,7 +958,8 @@ class GeographicInformationSystem:
                                          message="Selected file contains geometry other than Point/MultiPoint!")
                     return
 
-            # If it is not loaded, cancel the operation, close the newly created Toplevel window and display an error message
+            # If it is not loaded, cancel the operation, close the newly created Toplevel window and display an error
+            # message
             else:
                 nn_search.destroy()
                 messagebox.showerror(title='Error!',
@@ -977,8 +996,8 @@ class GeographicInformationSystem:
 
         # Display a message with the distance of the Point with entered coordinates and it's closest 'neighbor'
         messagebox.showinfo(title='Result',
-                            message="Distance between the entered point and it's closest neighbor is: {} meters.".format(
-                                closest_point['distance'][0]))
+                            message="Distance between the entered point and it's closest neighbor is: {} meters."
+                            .format(closest_point['distance'][0]))
 
     def get_nearest(self, src_points, candidates, k_neighbors=1):
 
@@ -1177,7 +1196,8 @@ class GeographicInformationSystem:
     def get_click_coordinates_vector(self, event):
 
         """
-        Method that is called when clicked inside the vector_can when the calculate_distance_vector_btn button is already clicked.
+        Method that is called when clicked inside the vector_can when the calculate_distance_vector_btn button is
+        already clicked.
         It is used to update labels and bindings regarding the distance measurement.
         :param event: Represents the click event, holding information regarding it
         """
@@ -1235,14 +1255,6 @@ class GeographicInformationSystem:
 
             # Enable the load_csv_btn, since the operation of measuring is now finished
             self.load_csv_btn.config(state=NORMAL)
-
-    def about(self):
-        """
-        Method that is called when the about_btn is clicked.
-        It displays basic information about the application.
-        """
-        messagebox.showinfo(title='About the program',
-                            message="This program is a geographic information system created by Stefan Radojević.")
 
     def exit(self):
         """
